@@ -23,9 +23,10 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 interface TemperatureChartProps {
   coolerId: string
+  maxTemperature?: number
 }
 
-export default function TemperatureChart({ coolerId }: TemperatureChartProps) {
+export default function TemperatureChart({ coolerId, maxTemperature }: TemperatureChartProps) {
   const [temperatureData, setTemperatureData] = useState<TemperatureRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [timeRange, setTimeRange] = useState("7") // Default to 7 days
@@ -55,53 +56,122 @@ export default function TemperatureChart({ coolerId }: TemperatureChartProps) {
     return () => clearInterval(intervalId)
   }, [coolerId, timeRange])
 
+  // Create a dataset for the max temperature line if provided
+  const datasets = [
+    {
+      label: "Temperature (°C)",
+      data: temperatureData.map((record) => ({
+        x: new Date(record.timestamp),
+        y: record.temperature,
+      })),
+      borderColor: "rgb(53, 162, 235)",
+      backgroundColor: "rgba(53, 162, 235, 0.5)",
+      borderWidth: 2,
+      tension: 0.1,
+    },
+  ]
+
+  // Add max temperature line if provided
+  if (maxTemperature !== undefined) {
+    datasets.push({
+      label: "Max Safe Temperature",
+      data: temperatureData.map((record) => ({
+        x: new Date(record.timestamp),
+        y: maxTemperature,
+      })),
+      borderColor: "rgba(255, 99, 132, 0.8)",
+      backgroundColor: "rgba(255, 99, 132, 0.2)",
+      borderWidth: 2,
+      borderDash: [5, 5],
+      fill: false,
+      pointRadius: 0,
+    })
+  }
+
   const chartData = {
-    datasets: [
-      {
-        label: "Temperature (°C)",
-        data: temperatureData.map((record) => ({
-          x: new Date(record.timestamp),
-          y: record.temperature,
-        })),
-        borderColor: "rgb(53, 162, 235)",
-        backgroundColor: "rgba(53, 162, 235, 0.5)",
-      },
-    ],
+    datasets,
   }
 
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     scales: {
       x: {
         type: "time" as const,
         time: {
           unit: timeRange === "1" ? "hour" : timeRange === "7" ? "day" : "week",
+          displayFormats: {
+            hour: "HH:mm",
+            day: "MMM d",
+            week: "MMM d",
+          },
+        },
+        grid: {
+          color: "rgba(0, 0, 0, 0.1)",
         },
         title: {
           display: true,
           text: "Time",
+          font: {
+            size: 14,
+            weight: "bold",
+          },
         },
       },
       y: {
+        grid: {
+          color: "rgba(0, 0, 0, 0.1)",
+        },
         title: {
           display: true,
           text: "Temperature (°C)",
+          font: {
+            size: 14,
+            weight: "bold",
+          },
         },
       },
     },
     plugins: {
       legend: {
         position: "top" as const,
+        labels: {
+          font: {
+            size: 12,
+          },
+          usePointStyle: true,
+          padding: 20,
+        },
       },
       title: {
         display: true,
         text: "Temperature History",
+        font: {
+          size: 18,
+          weight: "bold",
+        },
+        padding: {
+          top: 10,
+          bottom: 20,
+        },
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        titleFont: {
+          size: 14,
+        },
+        bodyFont: {
+          size: 13,
+        },
+        padding: 10,
+        cornerRadius: 4,
+        displayColors: true,
       },
     },
   }
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Temperature History</CardTitle>
         <Select value={timeRange} onValueChange={setTimeRange}>
@@ -117,15 +187,15 @@ export default function TemperatureChart({ coolerId }: TemperatureChartProps) {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex justify-center items-center h-64">
+          <div className="flex justify-center items-center h-96">
             <div className="text-lg">Loading temperature data...</div>
           </div>
         ) : temperatureData.length === 0 ? (
-          <div className="flex justify-center items-center h-64">
+          <div className="flex justify-center items-center h-96">
             <div className="text-lg">No temperature data available</div>
           </div>
         ) : (
-          <div className="h-80">
+          <div className="h-96 w-full">
             <Line data={chartData} options={chartOptions} />
           </div>
         )}

@@ -74,8 +74,19 @@ export async function PATCH(request: Request, { params }: { params: { id: string
             }
           } else {
             // If temperature is now below max, reset the timestamp
-            if (drug.temperatureExceededSince) {
+            // But only if the drug is not already unusable
+            if (drug.temperatureExceededSince && !drug.unusable) {
               updates.temperatureExceededSince = null
+            }
+          }
+
+          // Check if the drug should be marked as unusable
+          if (drug.temperatureExceededSince && !drug.unusable) {
+            const exceededSince = new Date(drug.temperatureExceededSince)
+            const hoursExceeded = (new Date().getTime() - exceededSince.getTime()) / (1000 * 60 * 60)
+
+            if (hoursExceeded > drug.unsuitableTimeThreshold) {
+              updates.unusable = true
             }
           }
 

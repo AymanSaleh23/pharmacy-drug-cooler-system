@@ -26,11 +26,9 @@ const formSchema = z.object({
   maxTemperature: z.string().refine((val) => !isNaN(Number.parseFloat(val)), {
     message: "Max temperature must be a number",
   }),
-  unsuitableTimeThreshold: z
-    .string()
-    .refine((val) => !isNaN(Number.parseInt(val, 10)) && Number.parseInt(val, 10) > 0, {
-      message: "Unsuitable time threshold must be a positive number",
-    }),
+  unsuitableTimeThreshold: z.string().refine((val) => !isNaN(Number.parseFloat(val)) && Number.parseFloat(val) > 0, {
+    message: "Unsuitable time threshold must be a positive number",
+  }),
   numberOfPackages: z.string().refine((val) => !isNaN(Number.parseInt(val, 10)) && Number.parseInt(val, 10) > 0, {
     message: "Number of packages must be a positive number",
   }),
@@ -114,7 +112,7 @@ export default function EditDrugPage({ params }: { params: { id: string } }) {
           vendor: values.vendor,
           expirationDate: new Date(values.expirationDate).toISOString(),
           maxTemperature: Number.parseFloat(values.maxTemperature),
-          unsuitableTimeThreshold: Number.parseInt(values.unsuitableTimeThreshold, 10),
+          unsuitableTimeThreshold: Number.parseFloat(values.unsuitableTimeThreshold),
           numberOfPackages: Number.parseInt(values.numberOfPackages, 10),
           specifications: filteredSpecs,
           // We don't update the unusable flag here as it's handled by the system
@@ -282,7 +280,7 @@ export default function EditDrugPage({ params }: { params: { id: string } }) {
                     <FormItem>
                       <FormLabel>Unsuitable Threshold (hours)</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input type="number" step="0.1" {...field} />
                       </FormControl>
                       <FormDescription>Hours before drug becomes unusable at unsuitable temperature</FormDescription>
                       <FormMessage />

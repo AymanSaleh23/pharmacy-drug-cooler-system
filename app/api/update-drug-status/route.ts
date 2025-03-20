@@ -39,24 +39,16 @@ export async function POST() {
         isUnusable = hoursExceeded > drug.unsuitableTimeThreshold
       }
 
-      // Update the drug status if needed
-      if (isExpired || isUnusable) {
+      // Update the drug status if needed - only set to true, never back to false
+      if ((isExpired || isUnusable) && !drug.unusable) {
         updates.push({
           updateOne: {
             filter: { _id: drug._id },
             update: { $set: { unusable: true } },
           },
         })
-      } 
-      // else if (drug.unusable) {
-      //   // Reset unusable flag if conditions no longer apply
-      //   updates.push({
-      //     updateOne: {
-      //       filter: { _id: drug._id },
-      //       update: { $set: { unusable: false } },
-      //     },
-      //   })
-      // }
+      }
+      // We no longer reset the unusable flag if conditions no longer apply
     }
 
     if (updates.length > 0) {
