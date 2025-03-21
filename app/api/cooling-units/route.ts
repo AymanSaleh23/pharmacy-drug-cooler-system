@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb"
 
 export async function GET() {
   try {
-    const { db } = await connectToDatabase()
+    const { db } = await connectToDatabase();
 
     const coolingUnits = await db
       .collection("coolingUnits")
@@ -48,27 +48,22 @@ export async function GET() {
                 },
               },
             },
-            expiringDrugsCount: {
-              $size: {
-                $filter: {
-                  input: "$drugs",
-                  as: "drug",
-                  cond: { $lt: ["$$drug.expirationDate", new Date()] },
-                },
-              },
-            },
             totalDrugsCount: { $size: "$drugs" },
           },
         },
       ])
-      .toArray()
+      .toArray();
 
-    return NextResponse.json(coolingUnits)
+
+    return NextResponse.json(coolingUnits);
   } catch (error) {
-    console.error("Database error:", error)
-    return NextResponse.json({ error: "Failed to fetch cooling units" }, { status: 500 })
+    console.error("Database error:", error);
+    return NextResponse.json({ error: "Failed to fetch cooling units" }, { status: 500 });
   }
 }
+
+
+
 
 export async function POST(request: Request) {
   try {
