@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import { connectToDatabase } from "@/lib/mongodb"
+import { cookies } from "next/headers"
+
+function isAdmin(request: Request) {
+  const cookieStore = cookies()
+  const authRole = cookieStore.get("auth-role")?.value
+  return authRole === "admin"
+}
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -33,6 +40,11 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
+  // Check if user is admin
+  if (!isAdmin(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+  }
+
   try {
     const { db } = await connectToDatabase()
     const { temperature } = await request.json()
