@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
+import { cookies } from "next/headers"
+
+function isAdmin(request: Request) {
+  const cookieStore = cookies()
+  const authRole = cookieStore.get("auth-role")?.value
+  return authRole === "admin"
+}
 
 export async function GET() {
   try {
-    const { db } = await connectToDatabase();
+    const { db } = await connectToDatabase()
 
     const coolingUnits = await db
       .collection("coolingUnits")
@@ -48,24 +55,34 @@ export async function GET() {
                 },
               },
             },
+            expiringDrugsCount: {
+              $size: {
+                $filter: {
+                  input: "$drugs",
+                  as: "drug",
+                  cond: { $lt: ["$$drug.expirationDate", new Date()] },
+                },
+              },
+            },
             totalDrugsCount: { $size: "$drugs" },
           },
         },
       ])
-      .toArray();
+      .toArray()
 
-
-    return NextResponse.json(coolingUnits);
+    return NextResponse.json(coolingUnits)
   } catch (error) {
-    console.error("Database error:", error);
-    return NextResponse.json({ error: "Failed to fetch cooling units" }, { status: 500 });
+    console.error("Database error:", error)
+    return NextResponse.json({ error: "Failed to fetch cooling units" }, { status: 500 })
   }
 }
 
-
-
-
 export async function POST(request: Request) {
+  // Check if user is admin
+  if (!isAdmin(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+  }
+
   try {
     const { db } = await connectToDatabase()
     const data = await request.json()
