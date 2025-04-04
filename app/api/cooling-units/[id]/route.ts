@@ -42,7 +42,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
- 
 
   try {
     const { db } = await connectToDatabase()
