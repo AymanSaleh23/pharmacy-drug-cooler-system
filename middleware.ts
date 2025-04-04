@@ -18,8 +18,8 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url))
     }
 
-    // Block modification API requests (POST, PATCH, DELETE) for regular users
-    if (path.includes("/api/") && (method === "POST" || method === "PATCH" || method === "DELETE")) {
+    // Block modification API requests (POST, DELETE) for regular users
+    if (path.includes("/api/") && (method === "POST" || method === "DELETE")) {
       // Allow GET requests for all authenticated users
       if (method !== "GET") {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
