@@ -3,44 +3,6 @@ import { ObjectId } from "mongodb"
 import { connectToDatabase } from "@/lib/mongodb"
 import { cookies } from "next/headers"
 
-function isAdmin(request: Request) {
-  const cookieStore = cookies()
-  const authRole = cookieStore.get("auth-role")?.value
-  return authRole === "admin"
-}
-
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const { db } = await connectToDatabase()
-
-    const coolingUnit = await db
-      .collection("coolingUnits")
-      .aggregate([
-        {
-          $match: { _id: new ObjectId(params.id) },
-        },
-        {
-          $lookup: {
-            from: "drugs",
-            localField: "_id",
-            foreignField: "coolingUnitId",
-            as: "drugs",
-          },
-        },
-      ])
-      .next()
-
-    if (!coolingUnit) {
-      return NextResponse.json({ error: "Cooling unit not found" }, { status: 404 })
-    }
-
-    return NextResponse.json(coolingUnit)
-  } catch (error) {
-    console.error("Database error:", error)
-    return NextResponse.json({ error: "Failed to fetch cooling unit" }, { status: 500 })
-  }
-}
-
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
 
   try {
@@ -123,6 +85,44 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   } catch (error) {
     console.error("Database error:", error)
     return NextResponse.json({ error: "Failed to update cooling unit" }, { status: 500 })
+  }
+}
+
+function isAdmin(request: Request) {
+  const cookieStore = cookies()
+  const authRole = cookieStore.get("auth-role")?.value
+  return authRole === "admin"
+}
+
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const { db } = await connectToDatabase()
+
+    const coolingUnit = await db
+      .collection("coolingUnits")
+      .aggregate([
+        {
+          $match: { _id: new ObjectId(params.id) },
+        },
+        {
+          $lookup: {
+            from: "drugs",
+            localField: "_id",
+            foreignField: "coolingUnitId",
+            as: "drugs",
+          },
+        },
+      ])
+      .next()
+
+    if (!coolingUnit) {
+      return NextResponse.json({ error: "Cooling unit not found" }, { status: 404 })
+    }
+
+    return NextResponse.json(coolingUnit)
+  } catch (error) {
+    console.error("Database error:", error)
+    return NextResponse.json({ error: "Failed to fetch cooling unit" }, { status: 500 })
   }
 }
 
