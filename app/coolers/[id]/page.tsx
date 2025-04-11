@@ -38,7 +38,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
 
       // Check if cooler is unreachable
       const lastUpdated = data.lastUpdatedTemperature ? new Date(data.lastUpdatedTemperature) : null
-      const unreachable = lastUpdated ? new Date().getTime() - lastUpdated.getTime() > 30000 : false
+      const unreachable = lastUpdated ? new Date().getTime() - lastUpdated.getTime() > 120000 : false
       setIsUnreachable(unreachable)
 
       // Process drugs to update their status based on the new rules
@@ -88,7 +88,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
     // Set up polling every minute
     const intervalId = setInterval(() => {
       fetchCoolerDetails()
-    }, 1000) // 60000 ms = 1 minute
+    }, 1000) // 1000 ms = 1 second
 
     return () => clearInterval(intervalId)
   }, [fetchCoolerDetails])

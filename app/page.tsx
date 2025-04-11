@@ -95,7 +95,7 @@ export default function HomePage() {
     // Set up polling every minute
     const intervalId = setInterval(() => {
       fetchCoolingUnits()
-    }, 60000) // 60000 ms = 1 minute
+    }, 1000) // 1000 ms = 1 second
 
     return () => clearInterval(intervalId)
   }, [fetchCoolingUnits])
