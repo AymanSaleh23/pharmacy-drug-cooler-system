@@ -88,7 +88,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
     // Set up polling every minute
     const intervalId = setInterval(() => {
       fetchCoolerDetails()
-    }, 60000) // 60000 ms = 1 minute
+    }, 1000) // 60000 ms = 1 minute
 
     return () => clearInterval(intervalId)
   }, [fetchCoolerDetails])
@@ -271,7 +271,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                       )}
                     </div>
                   </div>
-
+                  {isAdmin && (
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="disabled"
@@ -281,6 +281,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                     />
                     <Label htmlFor="disabled">Disable Cooler</Label>
                   </div>
+                  )}
 
                   {/* In the cooler information card, update the buttons section */}
                   {/* Find the div with the flex gap-2 pt-4 class and replace it with: */}
