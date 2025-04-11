@@ -179,6 +179,15 @@ export default function TemperatureChart({ coolerId, maxTemperature }: Temperatu
             <SelectValue placeholder="Select time range" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="0m5">Last 5 Minutes</SelectItem>
+            <SelectItem value="0m15">Last 15 Minutes</SelectItem>
+            <SelectItem value="0m30">Last 30 Minutes</SelectItem>
+            <SelectItem value="0H1">Last 1 Hours</SelectItem>
+            <SelectItem value="0H2">Last 2 Hours</SelectItem>
+            <SelectItem value="0H4">Last 4 Hours</SelectItem>
+            <SelectItem value="0H6">Last 6 Hours</SelectItem>
+            <SelectItem value="0H8">Last 8 Hours</SelectItem>
+            <SelectItem value="0H12">Last 12 Hours</SelectItem>
             <SelectItem value="1">Last 24 Hours</SelectItem>
             <SelectItem value="7">Last 7 Days</SelectItem>
             <SelectItem value="30">Last 30 Days</SelectItem>

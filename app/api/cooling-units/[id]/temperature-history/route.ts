@@ -11,18 +11,31 @@ function isAdmin(request: Request) {
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { db } = await connectToDatabase()
+    const { db } = await connectToDatabase();
 
     // Get the URL search params to determine time range
-    const { searchParams } = new URL(request.url)
-    const days = Number.parseInt(searchParams.get("days") || "7", 10)
+    const { searchParams } = new URL(request.url);
+    const range = searchParams.get("days") || "7";
 
-    // Calculate the date range
-    const endDate = new Date()
-    const startDate = new Date()
-    startDate.setDate(startDate.getDate() - days)
+    // Calculate time range
+    const endDate = new Date();
+    const startDate = new Date();
 
-    // Query temperature history for the specified cooler and time range
+    if (range.startsWith("0m")) {
+      // Last X Minutes
+      const minutes = parseInt(range.slice(2), 10);
+      startDate.setMinutes(endDate.getMinutes() - minutes);
+    } else if (range.startsWith("0H")) {
+      // Last X Hours
+      const hours = parseInt(range.slice(2), 10);
+      startDate.setHours(endDate.getHours() - hours);
+    } else {
+      // Default to last X days
+      const days = parseInt(range, 10);
+      startDate.setDate(endDate.getDate() - days);
+    }
+
+    // Query temperature history
     const temperatureHistory = await db
       .collection("temperatureHistory")
       .find({
@@ -30,12 +43,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
         timestamp: { $gte: startDate, $lte: endDate },
       })
       .sort({ timestamp: 1 })
-      .toArray()
+      .toArray();
 
-    return NextResponse.json(temperatureHistory)
+    return NextResponse.json(temperatureHistory);
   } catch (error) {
-    console.error("Database error:", error)
-    return NextResponse.json({ error: "Failed to fetch temperature history" }, { status: 500 })
+    console.error("Database error:", error);
+    return NextResponse.json({ error: "Failed to fetch temperature history" }, { status: 500 });
   }
 }
 
