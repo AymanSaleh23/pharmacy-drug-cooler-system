@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Plus, Info, PlusCircle, Thermometer, Package, WifiOff, AlertTriangle } from "lucide-react"
+import { Plus, Info, PlusCircle, Thermometer, Package, WifiOff, AlertTriangle, BatteryFull, BatteryMedium, BatteryLow } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -130,7 +130,21 @@ export default function HomePage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {coolingUnits.map((cooler) => (
-              <Card key={cooler._id} className={cooler.disabled ? "border-blue-500" : ""}>
+              <Card
+                key={cooler._id}
+                className={
+                  cooler.disabled
+                    ? "border-blue-500"
+                    : (
+                      cooler.isUnreachable ||
+                      cooler.temperatureWarning ||
+                      !cooler.availability ||
+                      cooler.unusableDrugsCount > 0 ||
+                      cooler.expiringDrugsCount > 0
+                    )
+                      ? "border-orange-500"
+                      : "border-green-500"
+                }>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <CardTitle>{cooler.coolerModel}</CardTitle>
@@ -184,13 +198,12 @@ export default function HomePage() {
                   <div className="flex items-center mb-2">
                     <Thermometer className="h-5 w-5 mr-2 text-muted-foreground" />
                     <span
-                      className={`text-lg font-medium ${
-                        cooler.temperatureWarning
+                      className={`text-lg font-medium ${cooler.temperatureWarning
                           ? "text-red-500"
                           : cooler.currentTemperature > 8
                             ? "text-amber-500"
                             : ""
-                      }`}
+                        }`}
                     >
                       {cooler.currentTemperature}°C
                     </span>
