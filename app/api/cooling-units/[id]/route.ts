@@ -57,18 +57,17 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         temperature: data.currentTemperature,
         timestamp: new Date(),
       })
+    }
+    // Get the current cooling unit to check if we need to update drug temperature status
+    const currentCooler = await db.collection("coolingUnits").findOne({ _id: new ObjectId(params.id) })
 
-      // Get the current cooling unit to check if we need to update drug temperature status
-      const currentCooler = await db.collection("coolingUnits").findOne({ _id: new ObjectId(params.id) })
-
-      if (currentCooler) {
-
-
-        // Get all drugs for this cooler
-        const drugs = await db
-          .collection("drugs")
-          .find({ coolingUnitId: new ObjectId(params.id) })
-          .toArray()
+    if (currentCooler) {
+      // Get all drugs for this cooler
+      const drugs = await db
+        .collection("drugs")
+        .find({ coolingUnitId: new ObjectId(params.id) })
+        .toArray()
+      if (data.currentTemperature !== undefined) {
 
         // Check each drug to see if we need to update temperatureExceededSince and temperatureWarning
         for (const drug of drugs) {
@@ -110,6 +109,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         const anyDrugWithWarning = drugs.some((drug) => data.currentTemperature > drug.maxTemperature)
 
         data.temperatureWarning = anyDrugWithWarning
+      }
+
+      if (isAdmin(request)) {
 
         const result = await db
           .collection("coolingUnits")
@@ -118,10 +120,18 @@ export async function PATCH(request: Request, { params }: { params: { id: string
           return NextResponse.json({ error: "Cooling unit not found" }, { status: 404 })
         }
         return NextResponse.json(result)
-
+      }
+      else {
+        const {disabled, ...dataToSave} = data ;
+        const result = await db
+        .collection("coolingUnits")
+        .findOneAndUpdate({ _id: new ObjectId(params.id) }, { $set: dataToSave }, { returnDocument: "after" })
+      if (!result) {
+        return NextResponse.json({ error: "Cooling unit not found" }, { status: 404 })
+      }
+      return NextResponse.json(result)
       }
     }
-
 
   } catch (error) {
     console.error("Database error:", error)
