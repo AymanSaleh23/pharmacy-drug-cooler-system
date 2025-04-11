@@ -44,7 +44,7 @@ export default function HomePage() {
       const processedData = data.map((cooler: CoolingUnit) => {
         // Check if cooler is unreachable (last temperature update > 30 seconds ago)
         const lastUpdated = cooler.lastUpdatedTemperature ? new Date(cooler.lastUpdatedTemperature) : null
-        const isUnreachable = lastUpdated ? new Date().getTime() - lastUpdated.getTime() > 30000 : false
+        const isUnreachable = lastUpdated ? new Date().getTime() - lastUpdated.getTime() > 60000 * 3 : false
 
         // Process drugs to check expiration and usability based on the new rules
         if (cooler.drugs) {
