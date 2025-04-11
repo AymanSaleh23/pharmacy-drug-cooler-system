@@ -51,7 +51,7 @@ export default function TemperatureChart({ coolerId, maxTemperature }: Temperatu
     // Set up polling every minute
     const intervalId = setInterval(() => {
       fetchTemperatureHistory()
-    }, 1000) // 1000 ms = 1 second
+    }, 10000) // 10000 ms = 10 second
 
     return () => clearInterval(intervalId)
   }, [coolerId, timeRange])

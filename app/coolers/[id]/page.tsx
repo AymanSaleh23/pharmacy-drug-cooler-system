@@ -38,7 +38,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
 
       // Check if cooler is unreachable
       const lastUpdated = data.lastUpdatedTemperature ? new Date(data.lastUpdatedTemperature) : null
-      const unreachable = lastUpdated ? new Date().getTime() - lastUpdated.getTime() > 120000 : false
+      const unreachable = lastUpdated ? new Date().getTime() - lastUpdated.getTime() > 60000*3 : false
       setIsUnreachable(unreachable)
 
       // Process drugs to update their status based on the new rules
