@@ -63,73 +63,62 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
       if (currentCooler) {
 
-        // Check if 'disabled' has changed
-        const wasDisabled = currentCooler.disabled;
-        const willBeDisabled = data.disabled;
 
+        // Get all drugs for this cooler
+        const drugs = await db
+          .collection("drugs")
+          .find({ coolingUnitId: new ObjectId(params.id) })
+          .toArray()
 
-        if (wasDisabled === willBeDisabled) {
-          // Get all drugs for this cooler
-          const drugs = await db
-            .collection("drugs")
-            .find({ coolingUnitId: new ObjectId(params.id) })
-            .toArray()
+        // Check each drug to see if we need to update temperatureExceededSince and temperatureWarning
+        for (const drug of drugs) {
+          const updates: any = {}
 
-          // Check each drug to see if we need to update temperatureExceededSince and temperatureWarning
-          for (const drug of drugs) {
-            const updates: any = {}
+          // Set temperature warning flag
+          updates.temperatureWarning = data.currentTemperature > drug.maxTemperature
 
-            // Set temperature warning flag
-            updates.temperatureWarning = data.currentTemperature > drug.maxTemperature
-
-            if (data.currentTemperature > drug.maxTemperature) {
-              // If temperature is above max and we don't have a timestamp yet, set it
-              if (!drug.temperatureExceededSince) {
-                updates.temperatureExceededSince = new Date()
-              }
-            } else {
-              // If temperature is now below max, reset the timestamp
-              // But only if the drug is not already unusable
-              if (drug.temperatureExceededSince && !drug.unusable) {
-                updates.temperatureExceededSince = null
-              }
+          if (data.currentTemperature > drug.maxTemperature) {
+            // If temperature is above max and we don't have a timestamp yet, set it
+            if (!drug.temperatureExceededSince) {
+              updates.temperatureExceededSince = new Date()
             }
-
-            // Check if the drug should be marked as unusable
+          } else {
+            // If temperature is now below max, reset the timestamp
+            // But only if the drug is not already unusable
             if (drug.temperatureExceededSince && !drug.unusable) {
-              const exceededSince = new Date(drug.temperatureExceededSince)
-              const hoursExceeded = (new Date().getTime() - exceededSince.getTime()) / (1000 * 60 * 60)
-
-              if (hoursExceeded > drug.unsuitableTimeThreshold) {
-                updates.unusable = true
-              }
-            }
-
-            // Update the drug if we have changes
-            if (Object.keys(updates).length > 0) {
-              await db.collection("drugs").updateOne({ _id: drug._id }, { $set: updates })
+              updates.temperatureExceededSince = null
             }
           }
 
-          // Set temperatureWarning flag on the cooler if any drug has a warning
-          const anyDrugWithWarning = drugs.some((drug) => data.currentTemperature > drug.maxTemperature)
+          // Check if the drug should be marked as unusable
+          if (drug.temperatureExceededSince && !drug.unusable) {
+            const exceededSince = new Date(drug.temperatureExceededSince)
+            const hoursExceeded = (new Date().getTime() - exceededSince.getTime()) / (1000 * 60 * 60)
 
-          data.temperatureWarning = anyDrugWithWarning
-        }
-        else if (wasDisabled !== willBeDisabled && isAdmin(request)) {
-          const { disabled, ...dataToUpdate } = data; // exclude 'disabled'
-
-          const result = await db
-            .collection("coolingUnits")
-            .findOneAndUpdate({ _id: new ObjectId(params.id) }, { $set: dataToUpdate }, { returnDocument: "after" })
-          if (!result) {
-            return NextResponse.json({ error: "Cooling unit not found" }, { status: 404 })
+            if (hoursExceeded > drug.unsuitableTimeThreshold) {
+              updates.unusable = true
+            }
           }
-          return NextResponse.json(result)
+
+          // Update the drug if we have changes
+          if (Object.keys(updates).length > 0) {
+            await db.collection("drugs").updateOne({ _id: drug._id }, { $set: updates })
+          }
         }
-        else {
-          return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+
+        // Set temperatureWarning flag on the cooler if any drug has a warning
+        const anyDrugWithWarning = drugs.some((drug) => data.currentTemperature > drug.maxTemperature)
+
+        data.temperatureWarning = anyDrugWithWarning
+
+        const result = await db
+          .collection("coolingUnits")
+          .findOneAndUpdate({ _id: new ObjectId(params.id) }, { $set: data }, { returnDocument: "after" })
+        if (!result) {
+          return NextResponse.json({ error: "Cooling unit not found" }, { status: 404 })
         }
+        return NextResponse.json(result)
+
       }
     }
 
