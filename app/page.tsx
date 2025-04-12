@@ -193,6 +193,7 @@ export default function HomePage() {
                       )}
                       {!cooler.isUnreachable &&
                         !cooler.temperatureWarning &&
+                        !cooler.batteryWarning &&
                         cooler.availability &&
                         !cooler.disabled &&
                         cooler.unusableDrugsCount === 0 &&
