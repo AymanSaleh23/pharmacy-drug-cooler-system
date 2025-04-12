@@ -200,7 +200,7 @@ export default function HomePage() {
                         !cooler.disabled &&
                         cooler.unusableDrugsCount === 0 &&
                         cooler.expiringDrugsCount === 0 && 
-                        cooler.batteryLevel < 35  (
+                        cooler.batteryLevel < 35 && (
                           <Badge variant="secondary" className="bg-green-500 hover:bg-green-600">
                            <BatteryMedium className="h-3 w-3 mr-1" /> Battery below average
                           </Badge>
@@ -212,7 +212,7 @@ export default function HomePage() {
                         cooler.availability &&
                         !cooler.disabled &&
                         cooler.unusableDrugsCount === 0 &&
-                        cooler.expiringDrugsCount === 0 && 
+                        cooler.expiringDrugsCount === 0 && (
                           <Badge variant="secondary" className="bg-green-500 hover:bg-green-600">
                             <ThermometerSnowflake className="h-3 w-3 mr-1" /> All is Well
                           </Badge>
@@ -285,4 +285,3 @@ export default function HomePage() {
     </>
   )
 }
-
