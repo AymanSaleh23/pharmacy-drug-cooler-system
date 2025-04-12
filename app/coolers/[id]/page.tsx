@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Thermometer, Edit, Trash2, AlertTriangle, PlusCircle, WifiOff, Clock } from "lucide-react"
+import { ArrowLeft, Thermometer, Edit, Trash2, AlertTriangle, PlusCircle, WifiOff, Clock, BatteryFull, BatteryMedium, BatteryLow } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { BatteryStatus } from "@/components/ui/batter-status"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
@@ -38,7 +39,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
 
       // Check if cooler is unreachable
       const lastUpdated = data.lastUpdatedTemperature ? new Date(data.lastUpdatedTemperature) : null
-      const unreachable = lastUpdated ? new Date().getTime() - lastUpdated.getTime() > 60000*3 : false
+      const unreachable = lastUpdated ? new Date().getTime() - lastUpdated.getTime() > 60000 * 3 : false
       setIsUnreachable(unreachable)
 
       // Process drugs to update their status based on the new rules
@@ -206,14 +207,20 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                       <span className="text-lg font-medium">Current Temperature:</span>
                     </div>
                     <span
-                      className={`text-lg font-bold ${
-                        hasTemperatureWarning ? "text-red-500" : cooler.currentTemperature > 8 ? "text-amber-500" : ""
-                      }`}
+                      className={`text-lg font-bold ${hasTemperatureWarning ? "text-red-500" : cooler.currentTemperature > 8 ? "text-amber-500" : ""
+                        }`}
                     >
                       {cooler.currentTemperature}°C
                       {hasTemperatureWarning && <AlertTriangle className="h-4 w-4 ml-1 text-red-500" />}
                     </span>
                   </div>
+                  
+                  <div className="flex items-center mb-2">
+                    <BatteryStatus
+                      batteryLevel={cooler.batteryLevel}
+                    />
+                  </div>
+
 
                   {cooler.lastUpdatedTemperature && (
                     <div className="flex items-center text-sm text-muted-foreground">
@@ -258,13 +265,21 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                           <AlertTriangle className="h-3 w-3 mr-1" /> Temperature Warning
                         </Badge>
                       )}
+                      {cooler.batteryWarning && (
+                        <Badge
+                          variant="outline"
+                          className="bg-red-100 text-red-800 border-red-300 hover:bg-red-200 flex items-center"
+                        >
+                          <AlertTriangle className="h-3 w-3 mr-1" /> Battery Warning
+                        </Badge>
+                      )}
                       {!cooler.availability && <Badge variant="destructive">Unavailable</Badge>}
                       {cooler.disabled && (
                         <Badge variant="secondary" className="bg-blue-600 hover:bg-blue-700">
                           Disabled
                         </Badge>
                       )}
-                      {!isUnreachable && !hasTemperatureWarning && cooler.availability && !cooler.disabled && (
+                      {!isUnreachable && !hasTemperatureWarning && !cooler.batteryWarning && cooler.availability && !cooler.disabled && (
                         <Badge variant="secondary" className="bg-green-500 hover:bg-green-600">
                           All is Well
                         </Badge>
@@ -272,15 +287,15 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                     </div>
                   </div>
                   {isAdmin && (
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="disabled"
-                      checked={cooler.disabled}
-                      onCheckedChange={handleDisableToggle}
-                      disabled={isUpdating}
-                    />
-                    <Label htmlFor="disabled">Disable Cooler</Label>
-                  </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="disabled"
+                        checked={cooler.disabled}
+                        onCheckedChange={handleDisableToggle}
+                        disabled={isUpdating}
+                      />
+                      <Label htmlFor="disabled">Disable Cooler</Label>
+                    </div>
                   )}
 
                   {/* In the cooler information card, update the buttons section */}
