@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Plus, Info, PlusCircle, Thermometer, Package, WifiOff, AlertTriangle} from "lucide-react"
+import { Plus, Info, PlusCircle, Thermometer, Package, WifiOff, AlertTriangle, Flame, ThermometerSnowflake , BatteryMedium, BatteryLow} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -178,12 +178,13 @@ export default function HomePage() {
                           variant="outline"
                           className="bg-red-100 text-red-800 border-red-300 hover:bg-red-200 flex items-center"
                         >
-                          <AlertTriangle className="h-3 w-3 mr-1" /> Battery Warning
+                          <BatteryLow className="h-3 w-3 mr-1" /> Battery Warning
                         </Badge>
                       )}
                       {cooler.unusableDrugsCount > 0 && (
                         <Badge variant="secondary" className="bg-orange-500 hover:bg-orange-600">
-                          {cooler.unusableDrugsCount} Unusable
+                          {cooler.unusableDrugsCount}  
+                          <Flame className="h-3 w-3 mr-1" /> Unusable
                         </Badge>
                       )}
                       {cooler.expiringDrugsCount > 0 && (
@@ -191,15 +192,29 @@ export default function HomePage() {
                           {cooler.expiringDrugsCount} Expired
                         </Badge>
                       )}
+                        
                       {!cooler.isUnreachable &&
                         !cooler.temperatureWarning &&
                         !cooler.batteryWarning &&
                         cooler.availability &&
                         !cooler.disabled &&
                         cooler.unusableDrugsCount === 0 &&
-                        cooler.expiringDrugsCount === 0 && (
+                        cooler.expiringDrugsCount === 0 && 
+                        cooler.batteryLevel < 35  (
                           <Badge variant="secondary" className="bg-green-500 hover:bg-green-600">
-                            All is Well
+                           <BatteryMedium className="h-3 w-3 mr-1" /> Battery below average
+                          </Badge>
+                        )}
+                         
+                      {!cooler.isUnreachable &&
+                        !cooler.temperatureWarning &&
+                        !cooler.batteryWarning &&
+                        cooler.availability &&
+                        !cooler.disabled &&
+                        cooler.unusableDrugsCount === 0 &&
+                        cooler.expiringDrugsCount === 0 && 
+                          <Badge variant="secondary" className="bg-green-500 hover:bg-green-600">
+                            <ThermometerSnowflake className="h-3 w-3 mr-1" /> All is Well
                           </Badge>
                         )}
                     </div>
@@ -224,6 +239,13 @@ export default function HomePage() {
                       </span>
                     )}
                   </div>
+                   
+                  <div className="flex items-center mb-2">
+                    <BatteryStatus
+                      batteryLevel={cooler.batteryLevel}
+                    />
+                  </div>
+
                   <p className="text-sm text-muted-foreground">{cooler.vendor}</p>
                   <p className="text-sm text-muted-foreground truncate">{cooler.address}</p>
                   <div className="mt-2 flex items-center">

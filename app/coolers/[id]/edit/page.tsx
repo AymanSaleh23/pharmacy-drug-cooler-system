@@ -64,7 +64,6 @@ export default function EditCoolerPage({ params }: { params: { id: string } }) {
           vendor: coolerData.vendor,
           address: coolerData.address,
           description: coolerData.description || "",
-          currentTemperature: coolerData.currentTemperature.toString(),
           availability: coolerData.availability,
           disabled: coolerData.disabled,
         })
@@ -91,7 +90,6 @@ export default function EditCoolerPage({ params }: { params: { id: string } }) {
           vendor: values.vendor,
           address: values.address,
           description: values.description,
-          currentTemperature: Number.parseFloat(values.currentTemperature),
           availability: values.availability,
           disabled: values.disabled,
         }),
@@ -198,20 +196,6 @@ export default function EditCoolerPage({ params }: { params: { id: string } }) {
                     <FormLabel>Description (Optional)</FormLabel>
                     <FormControl>
                       <Textarea placeholder="Enter cooler description" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="currentTemperature"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current Temperature (°C)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Thermometer, Edit, Trash2, AlertTriangle, PlusCircle, WifiOff, Clock} from "lucide-react"
+import { ArrowLeft, Thermometer, Edit, Trash2, AlertTriangle, AlarmClock, Flame, ThermometerSnowflake, PlusCircle, WifiOff, Clock, BatteryMedium, BatteryLow } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -214,7 +214,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                       {hasTemperatureWarning && <AlertTriangle className="h-4 w-4 ml-1 text-red-500" />}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center mb-2">
                     <BatteryStatus
                       batteryLevel={cooler.batteryLevel}
@@ -270,7 +270,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                           variant="outline"
                           className="bg-red-100 text-red-800 border-red-300 hover:bg-red-200 flex items-center"
                         >
-                          <AlertTriangle className="h-3 w-3 mr-1" /> Battery Warning
+                          <BatteryLow className="h-3 w-3 mr-1" /> Battery Warning
                         </Badge>
                       )}
                       {!cooler.availability && <Badge variant="destructive">Unavailable</Badge>}
@@ -279,9 +279,17 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                           Disabled
                         </Badge>
                       )}
-                      {!isUnreachable && !hasTemperatureWarning && !cooler.batteryWarning && cooler.availability && !cooler.disabled && (
+                      {!isUnreachable && !hasTemperatureWarning && !cooler.batteryWarning && 
+                      cooler.availability && !cooler.disabled && 
+                      && !cooler.batteryLevel < 35 && (
+                        <Badge variant="secondary" className="bg-yellow-500 hover:bg-green-600">
+                          <BatteryMedium className="h-3 w-3 mr-1" /> Battery below average
+                        </Badge>
+                      )}
+                      {!isUnreachable && !hasTemperatureWarning && !cooler.batteryWarning && 
+                        cooler.availability && !cooler.disabled && (
                         <Badge variant="secondary" className="bg-green-500 hover:bg-green-600">
-                          All is Well
+                        <ThermometerSnowflake className="h-3 w-3 mr-1" /> All is Well
                         </Badge>
                       )}
                     </div>
@@ -359,7 +367,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                               )}
                               {drug.isUnusable && (
                                 <Badge variant="destructive" className="flex items-center">
-                                  <AlertTriangle className="h-3 w-3 mr-1" /> Unusable
+                                  <Flame className="h-3 w-3 mr-1" /> Unusable
                                 </Badge>
                               )}
                               {drug.isExpired && <Badge variant="destructive">Expired</Badge>}
@@ -367,7 +375,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                                 !drug.isExpired &&
                                 new Date(drug.expirationDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) && (
                                   <Badge variant="outline" className="text-orange-500 border-orange-500">
-                                    Expiring Soon
+                                    <AlarmClock className="h-3 w-3 mr-1" />  Expiring Soon
                                   </Badge>
                                 )}
                             </div>
