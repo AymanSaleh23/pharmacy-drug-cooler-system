@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/generate-firebase-sw.js",
     "start": "next start",
     "lint": "next lint"
   },
@@ -69,7 +69,9 @@
     "mongodb": "latest",
     "react-chartjs-2": "latest",
     "chartjs-adapter-date-fns": "latest",
-    "cookies-next": "latest"
+    "cookies-next": "latest",
+    "firebase": "^10.7.0",
+    "firebase-admin": "^11.11.0"
   },
   "devDependencies": {
     "@types/node": "^22",
