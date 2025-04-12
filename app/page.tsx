@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Plus, Info, PlusCircle, Thermometer, Package, WifiOff, AlertTriangle, BatteryFull, BatteryMedium, BatteryLow } from "lucide-react"
+import { Plus, Info, PlusCircle, Thermometer, Package, WifiOff, AlertTriangle} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { BatteryStatus } from "@/components/ui/batter-status"
 import AddCoolerDialog from "@/components/add-cooler-dialog"
 import type { CoolingUnit } from "@/lib/types"
 
@@ -138,6 +139,7 @@ export default function HomePage() {
                     : (
                       cooler.isUnreachable ||
                       cooler.temperatureWarning ||
+                      cooler.batteryWarning ||
                       !cooler.availability ||
                       cooler.unusableDrugsCount > 0 ||
                       cooler.expiringDrugsCount > 0
@@ -169,6 +171,14 @@ export default function HomePage() {
                           className="bg-red-100 text-red-800 border-red-300 hover:bg-red-200 flex items-center"
                         >
                           <AlertTriangle className="h-3 w-3 mr-1" /> Temperature Warning
+                        </Badge>
+                      )}
+                      {cooler.batteryWarning && (
+                        <Badge
+                          variant="outline"
+                          className="bg-red-100 text-red-800 border-red-300 hover:bg-red-200 flex items-center"
+                        >
+                          <AlertTriangle className="h-3 w-3 mr-1" /> Battery Warning
                         </Badge>
                       )}
                       {cooler.unusableDrugsCount > 0 && (

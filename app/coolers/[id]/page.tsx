@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Thermometer, Edit, Trash2, AlertTriangle, PlusCircle, WifiOff, Clock, BatteryFull, BatteryMedium, BatteryLow } from "lucide-react"
+import { ArrowLeft, Thermometer, Edit, Trash2, AlertTriangle, PlusCircle, WifiOff, Clock} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
