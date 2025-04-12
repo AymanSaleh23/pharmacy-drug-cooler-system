@@ -119,17 +119,30 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         if (!result) {
           return NextResponse.json({ error: "Cooling unit not found" }, { status: 404 })
         }
-        return NextResponse.json(result)
+        const notedResult = {
+          ...result,
+          note: "Authorized Changes"
+        };
+        return NextResponse.json(notedResult)
       }
+
       else {
-        const {disabled, ...dataToSave} = data ;
+        if (data.disabled !== undefined && data.disabled !== currentCooler.disabled) {
+          return NextResponse.json({ error: "Unauthorized Change" }, { status: 403 })
+        }
+
+        const { disabled, ...dataToSave } = data;
         const result = await db
-        .collection("coolingUnits")
-        .findOneAndUpdate({ _id: new ObjectId(params.id) }, { $set: dataToSave }, { returnDocument: "after" })
-      if (!result) {
-        return NextResponse.json({ error: "Cooling unit not found" }, { status: 404 })
-      }
-      return NextResponse.json(result)
+          .collection("coolingUnits")
+          .findOneAndUpdate({ _id: new ObjectId(params.id) }, { $set: dataToSave }, { returnDocument: "after" })
+        if (!result) {
+          return NextResponse.json({ error: "Cooling unit not found" }, { status: 404 })
+        }
+        const notedResult = {
+          ...result,
+          note: "Unauthorized Change detected, But updated any other field "
+        };
+        return NextResponse.json(notedResult)
       }
     }
 
