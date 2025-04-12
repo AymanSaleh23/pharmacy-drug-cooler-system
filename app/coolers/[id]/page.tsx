@@ -178,6 +178,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
 
   // Check if any drug has a temperature warning
   const hasTemperatureWarning = drugs.some((drug) => drug.temperatureWarning)
+  const hasExpirationSoon = drugs.some((drug) =>   new Date(drug.expirationDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
 
   // Update the return statement to include the Header component
   return (
@@ -212,6 +213,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                     >
                       {cooler.currentTemperature}°C
                       {hasTemperatureWarning && <AlertTriangle className="h-4 w-4 ml-1 text-red-500" />}
+                      {hasExpirationSoon && <AlarmClock className="h-4 w-4 ml-1 text-yellow-500" />}
                     </span>
                   </div>
 
@@ -263,6 +265,14 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                           className="bg-red-100 text-red-800 border-red-300 hover:bg-red-200 flex items-center"
                         >
                           <AlertTriangle className="h-3 w-3 mr-1" /> Temperature Warning
+                        </Badge>
+                      )}
+                      {hasExpirationSoon && (
+                        <Badge
+                          variant="outline"
+                          className="bg-red-100 text-yellow-800 border-red-300 hover:bg-yellow-200 flex items-center"
+                        >
+                          <AlarmClock className="h-3 w-3 mr-1" /> Expiring Soon
                         </Badge>
                       )}
                       {cooler.batteryWarning && (

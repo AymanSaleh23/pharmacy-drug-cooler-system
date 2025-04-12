@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Plus, Info, PlusCircle, Thermometer, Package, WifiOff, AlertTriangle, Flame, ThermometerSnowflake , BatteryMedium, BatteryLow} from "lucide-react"
+import { Plus, Info, PlusCircle, Thermometer, Package, WifiOff, AlertTriangle, AlarmClock, Flame, ThermometerSnowflake , BatteryMedium, BatteryLow} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -179,6 +179,15 @@ export default function HomePage() {
                           className="bg-red-100 text-red-800 border-red-300 hover:bg-red-200 flex items-center"
                         >
                           <BatteryLow className="h-3 w-3 mr-1" /> Battery Warning
+                        </Badge>
+                      )}
+                      {cooler.drugs.filter((drug) => new Date(drug.expirationDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).length > 0 && (
+                        <Badge
+                          variant="outline"
+                          className="bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200 flex items-center"
+                          >
+                          {cooler.drugs.filter((drug) => new Date(drug.expirationDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).length}
+                          <AlarmClock className="h-3 w-3 mr-1" /> Expiring Soon
                         </Badge>
                       )}
                       {cooler.unusableDrugsCount > 0 && (
