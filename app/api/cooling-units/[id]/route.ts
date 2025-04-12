@@ -127,10 +127,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       }
 
       else {
+        let notes = "Authorized Changes";
         if (data.disabled !== undefined && data.disabled !== currentCooler.disabled) {
-          return NextResponse.json({ error: "Unauthorized Change" }, { status: 403 })
-        }
-
+          notes = "Unauthorized Change detected, But updated any other field";
+        }          
         const { disabled, ...dataToSave } = data;
         const result = await db
           .collection("coolingUnits")
@@ -140,7 +140,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         }
         const notedResult = {
           ...result,
-          note: "Unauthorized Change detected, But updated any other field "
+          note: notes
         };
         return NextResponse.json(notedResult)
       }
