@@ -289,7 +289,7 @@ export default function CoolerDetailsPage({ params }: { params: { id: string } }
                           Disabled
                         </Badge>
                       )}
-                      {!isUnreachable && !hasTemperatureWarning && !cooler.batteryWarning && cooler.availability && !cooler.disabled && !cooler.batteryLevel < 35 && (
+                      {!isUnreachable && !hasTemperatureWarning && !cooler.batteryWarning && cooler.availability && !cooler.disabled && cooler.batteryLevel < 35 && (
                         <Badge variant="secondary" className="bg-yellow-500 hover:bg-green-600">
                           <BatteryMedium className="h-3 w-3 mr-1" /> Battery below average
                         </Badge>
