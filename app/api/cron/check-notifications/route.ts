@@ -23,13 +23,3 @@ export async function GET() {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-
-// Configure in vercel.json:
-// {
-//   "crons": [
-//     {
-//       "path": "/api/cron/check-notifications",
-//       "schedule": "*/15 * * * *"
-//     }
-//   ]
-// }
