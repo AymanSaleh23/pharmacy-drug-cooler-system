@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export function middleware(request: NextRequest) {
-  const authRole = request.cookies.get("auth-role")?.value
+export async function middleware(request: NextRequest) {
+  const authRole = await request.cookies.get("auth-role")?.value
   const path = request.nextUrl.pathname
   const method = request.method
 

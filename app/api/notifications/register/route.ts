@@ -1,36 +1,29 @@
-import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { registerDeviceToken } from "@/lib/notification-service"
+// app/api/register-device/route.ts
+import { NextResponse } from 'next/server';
+import { connectToDatabase } from '@/lib/mongodb'; // Assuming you have this
+import { ObjectId } from 'mongodb';
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const cookieStore = cookies()
-    const authRole = cookieStore.get("auth-role")?.value
+    const { deviceToken } = await req.json();
 
-    if (!authRole) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (!deviceToken) {
+      return NextResponse.json({ error: 'Missing device token' }, { status: 400 });
     }
 
-    const { token } = await request.json()
+    const {db} = await connectToDatabase();
+    const tokensCollection = db.collection('deviceTokens');
 
-    if (!token) {
-      return NextResponse.json({ error: "Token is required" }, { status: 400 })
-    }
+    // Insert if not already exists
+    await tokensCollection.updateOne(
+      { deviceToken },
+      { $setOnInsert: { deviceToken, createdAt: new Date() } },
+      { upsert: true }
+    );
 
-    // Use the role as the userId for simplicity
-    // In a real app, you would use a proper user ID
-    const userId = authRole
-
-    const success = await registerDeviceToken(userId, token)
-
-    if (success) {
-      return NextResponse.json({ success: true })
-    } else {
-      return NextResponse.json({ error: "Failed to register device token" }, { status: 500 })
-    }
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error in register device token API:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error(error);
+    return NextResponse.json({ error: 'Server Error' }, { status: 500 });
   }
 }
-
