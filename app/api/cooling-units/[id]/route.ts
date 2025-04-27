@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import { connectToDatabase } from "@/lib/mongodb"
 import { cookies } from "next/headers"
-import {axios} from "axios"
+
 
 function isAdmin(request: Request) {
   const cookieStore = cookies()
@@ -69,7 +69,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         title: `Availability Alert!`,
         body: `Cooler Unit: ${currentCooler.name} is not available!`
       }
-      const response = await axios.post('/api/notifications/send', payload);
+      const response = await fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
     }
     if (currentCooler) {
       // Get all drugs for this cooler
@@ -110,7 +116,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
                 title: `Unsability Alert!`,
                 body: `Drug ${drug.name} is not usable anymore due to temperature exceed time limits!`
               }
-              const response = await axios.post('/api/notifications/send', payload);
+              const response = await fetch('/api/notifications/send', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+              });
             }
           }
 
@@ -128,7 +140,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
           title: `Temeratue Warning!`,
           body: `Cooler Unit: ${currentCooler.name} exceeds temperature limits ${data.currentTemperature}!`
         }
-        const response = await axios.post('/api/notifications/send', payload);
+        const response = await fetch('/api/notifications/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
       }
 
       if (isAdmin(request)) {
