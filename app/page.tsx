@@ -107,7 +107,7 @@ export default function HomePage() {
       <Header />
       <div className="container mx-auto py-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Pharmacy Drug Cooler Management</h1>
+          <h1 className="text-3xl font-bold">PharmaSafe Link</h1>
           {isAdmin && (
             <Button onClick={() => setIsAddCoolerOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Add Cooler

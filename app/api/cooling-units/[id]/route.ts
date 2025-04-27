@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import { connectToDatabase } from "@/lib/mongodb"
 import { cookies } from "next/headers"
+import {axios} from "axios"
 
 function isAdmin(request: Request) {
   const cookieStore = cookies()
@@ -46,6 +47,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   try {
     const { db } = await connectToDatabase()
     const data = await request.json()
+    let { title, body } = await request.json();
+    // Prepare data to send in the request
+    let payload = { title, body };
 
     // If temperature is being updated, add lastUpdatedTemperature and save to history
     if (data.currentTemperature !== undefined) {
@@ -60,7 +64,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
     // Get the current cooling unit to check if we need to update drug temperature status
     const currentCooler = await db.collection("coolingUnits").findOne({ _id: new ObjectId(params.id) })
-
+    if (currentCooler && data.availability === false) {
+      payload = {
+        title: `Availability Alert!`,
+        body: `Cooler Unit: ${currentCooler.name} is not available!`
+      }
+      const response = await axios.post('/api/notifications/send', payload);
+    }
     if (currentCooler) {
       // Get all drugs for this cooler
       const drugs = await db
@@ -96,6 +106,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
             if (hoursExceeded > drug.unsuitableTimeThreshold) {
               updates.unusable = true
+              payload = {
+                title: `Unsability Alert!`,
+                body: `Drug ${drug.name} is not usable anymore due to temperature exceed time limits!`
+              }
+              const response = await axios.post('/api/notifications/send', payload);
             }
           }
 
@@ -109,6 +124,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         const anyDrugWithWarning = drugs.some((drug) => data.currentTemperature > drug.maxTemperature)
 
         data.temperatureWarning = anyDrugWithWarning
+        payload = {
+          title: `Temeratue Warning!`,
+          body: `Cooler Unit: ${currentCooler.name} exceeds temperature limits ${data.currentTemperature}!`
+        }
+        const response = await axios.post('/api/notifications/send', payload);
       }
 
       if (isAdmin(request)) {
@@ -130,7 +150,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         let notes = "Authorized Changes";
         if (data.disabled !== undefined && data.disabled !== currentCooler.disabled) {
           notes = "Unauthorized Change detected, But updated any other field";
-        }          
+        }
         const { disabled, ...dataToSave } = data;
         const result = await db
           .collection("coolingUnits")

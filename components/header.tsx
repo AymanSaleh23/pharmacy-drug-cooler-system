@@ -14,7 +14,7 @@ export default function Header() {
     <header className="border-b">
       <div className="container mx-auto py-3 flex items-center justify-between">
         <Link href="/" className="text-xl font-bold">
-          Pharmacy Drug Cooler System
+          PharmaSafe Link
         </Link>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
