@@ -47,7 +47,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   try {
     const { db } = await connectToDatabase()
     const data = await request.json()
-    let { title, body } = await request.json();
+    const receivedID = await params.id
+    let { title, body } = data;
     // Prepare data to send in the request
     let payload = { title, body };
 
@@ -57,31 +58,54 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
       // Save temperature to history
       await db.collection("temperatureHistory").insertOne({
-        coolingUnitId: new ObjectId(params.id),
+        coolingUnitId: new ObjectId(receivedID),
         temperature: data.currentTemperature,
         timestamp: new Date(),
       })
     }
     // Get the current cooling unit to check if we need to update drug temperature status
-    const currentCooler = await db.collection("coolingUnits").findOne({ _id: new ObjectId(params.id) })
+    const currentCooler = await db.collection("coolingUnits").findOne({ _id: new ObjectId(receivedID) })
     if (currentCooler && data.availability === false) {
+      console.log(`Availability Alert: ${currentCooler.coolerModel, currentCooler.address}`);
       payload = {
         title: `Availability Alert!`,
-        body: `Cooler Unit: ${currentCooler.name} is not available!`
+        body: `Cooler Unit: is not available!\nModel:${currentCooler.coolerModel}\nVendor:${currentCooler.vendor}\nAddress:${currentCooler.address}`
       }
-      const response = await fetch('/api/notifications/send', {
+      const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cookie': "auth-role=user"
         },
         body: JSON.stringify(payload),
       });
+      console.log(`Availability Alert notification response: ${receivedID}\n ${response}`); 
     }
+
+  
+    if (currentCooler && data.batteryWarning === true) {
+      console.log(`Battery Warning: ${receivedID}`);
+      payload = {
+        title: `Battery Warning !`,
+        body: `Cooler Unit: Battey < 20%!\nModel:${currentCooler.coolerModel}\nVendor:${currentCooler.vendor}\nAddress:${currentCooler.address}`
+      }
+      const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': "auth-role=user"
+        },
+        body: JSON.stringify(payload),
+      });
+      console.log(`Battery Warning notification response: ${receivedID}\n ${response}`); 
+    }
+
+  
     if (currentCooler) {
       // Get all drugs for this cooler
       const drugs = await db
         .collection("drugs")
-        .find({ coolingUnitId: new ObjectId(params.id) })
+        .find({ coolingUnitId: new ObjectId(receivedID) })
         .toArray()
       if (data.currentTemperature !== undefined) {
 
@@ -112,17 +136,20 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
             if (hoursExceeded > drug.unsuitableTimeThreshold) {
               updates.unusable = true
+              console.log(`Unsability Alert: ${receivedID}`);
               payload = {
                 title: `Unsability Alert!`,
-                body: `Drug ${drug.name} is not usable anymore due to temperature exceed time limits!`
+                body: `Drug ${drug.name} is not usable anymore due to temperature exceed time limits!\nModel:${currentCooler.coolerModel}\nVendor:${currentCooler.vendor}\nAddress:${currentCooler.address}`
               }
-              const response = await fetch('/api/notifications/send', {
+              const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
+                  'Cookie': "auth-role=user"
                 },
                 body: JSON.stringify(payload),
               });
+              console.log(`Unsability Alert notification response: ${receivedID}\n ${response}`); 
             }
           }
 
@@ -136,24 +163,27 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         const anyDrugWithWarning = drugs.some((drug) => data.currentTemperature > drug.maxTemperature)
 
         data.temperatureWarning = anyDrugWithWarning
+        console.log(`Temperature Warning: ${receivedID}`);
         payload = {
-          title: `Temeratue Warning!`,
-          body: `Cooler Unit: ${currentCooler.name} exceeds temperature limits ${data.currentTemperature}!`
+          title: `Temperature Warning!`,
+          body: `Cooler Unit: Exceeds temperature limits ${data.currentTemperature}!\nModel:${currentCooler.coolerModel}\nVendor:${currentCooler.vendor}\nAddress:${currentCooler.address}`
         }
-        const response = await fetch('/api/notifications/send', {
+        const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Cookie': "auth-role=user"
           },
           body: JSON.stringify(payload),
         });
+        console.log(`Temperature Warning notification response: ${receivedID}\n ${response}`); 
       }
 
       if (isAdmin(request)) {
 
         const result = await db
           .collection("coolingUnits")
-          .findOneAndUpdate({ _id: new ObjectId(params.id) }, { $set: data }, { returnDocument: "after" })
+          .findOneAndUpdate({ _id: new ObjectId(receivedID) }, { $set: data }, { returnDocument: "after" })
         if (!result) {
           return NextResponse.json({ error: "Cooling unit not found" }, { status: 404 })
         }
@@ -172,7 +202,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         const { disabled, ...dataToSave } = data;
         const result = await db
           .collection("coolingUnits")
-          .findOneAndUpdate({ _id: new ObjectId(params.id) }, { $set: dataToSave }, { returnDocument: "after" })
+          .findOneAndUpdate({ _id: new ObjectId(receivedID) }, { $set: dataToSave }, { returnDocument: "after" })
         if (!result) {
           return NextResponse.json({ error: "Cooling unit not found" }, { status: 404 })
         }

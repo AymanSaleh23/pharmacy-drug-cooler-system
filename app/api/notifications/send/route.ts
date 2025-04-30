@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { messaging } from '@/lib/firebase-admin';
 import { cookies } from "next/headers"
+import { ObjectId } from 'mongodb';
 
 function isAdmin(request: Request) {
   const cookieStore = cookies()
@@ -13,12 +14,13 @@ function isAdmin(request: Request) {
 export async function POST(req: Request) {
   try {
     const { title:titleReq, body:bodyreq } = await req.json();
-
     const { db } = await connectToDatabase();
     const tokensCollection = db.collection('deviceTokens');
     const devices = await tokensCollection.find({}).toArray();
     const deviceTokens = devices.map((d: any) => d.token);
     console.log(deviceTokens);
+    console.log(`Message to send:\n${titleReq}\n${bodyreq}`);
+
     if (deviceTokens.length === 0) {
       return NextResponse.json({ error: 'No device tokens registered' }, { status: 400 });
     }

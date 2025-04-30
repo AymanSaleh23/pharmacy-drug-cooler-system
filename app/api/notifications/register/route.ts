@@ -1,14 +1,21 @@
 // app/api/register-device/route.ts
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb'; // Assuming you have this
+import { cookies } from "next/headers"
 import { ObjectId } from 'mongodb';
 
-export async function POST(req: Request) {
+function isAdmin(request: Request) {
+  const cookieStore = cookies()
+  const authRole = cookieStore.get("auth-role")?.value
+  return authRole === "admin"
+}
+
+export async function POST(request: Request) {
   try {
     if (isAdmin(request) === true || isAdmin(request) === false) {
 
 
-      const { token: deviceToken } = await req.json();
+      const { token: deviceToken } = await request.json();
 
       if (!deviceToken) {
         return NextResponse.json({ error: 'Missing device token' }, { status: 400 });
