@@ -18,6 +18,8 @@ export interface CoolingUnit {
   totalDrugsCount?: number
   isUnreachable?: boolean
   temperatureWarning?: boolean
+  notificationSentForUnreachable: boolean
+  notificationSentForUnavailable : boolean
 }
 
 export interface Drug {
@@ -28,13 +30,18 @@ export interface Drug {
     name: string
     value: string
   }[]
-  expirationDate: string
+  expirationDate: Date | string
   maxTemperature: number
   unsuitableTimeThreshold: number
   numberOfPackages: number
   unusable: boolean
   temperatureExceededSince?: Date | string | null
   temperatureWarning?: boolean
+  notificationSentForUnusable: boolean
+  notificationSentForExpired: boolean
+  notificationThreeMExp: boolean 
+  notificationOneMExp: boolean 
+  notificationOneWeekExp: boolean 
 }
 
 export interface TemperatureRecord {

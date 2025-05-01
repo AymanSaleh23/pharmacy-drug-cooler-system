@@ -112,152 +112,159 @@ export async function checkTemperatureBatteryWarning(debug): Promise<void> {
 // Check for expiration warnings
 export async function checkExpirationWarnings(debug): Promise<void> {
   try {
-    const { db } = await connectToDatabase()
+    const { db } = await connectToDatabase();
+    const now = new Date();
+    console.log(`Now ${now}`)
+    // Reference dates
+    const threeMonthsFromNow = new Date(now);
+    threeMonthsFromNow.setMonth(now.getMonth() + 3);
+    console.log(`3M  ${new Date(threeMonthsFromNow)}`)
 
-    const now = new Date()
+    const oneMonthFromNow = new Date(now);
+    oneMonthFromNow.setMonth(now.getMonth() + 1);
+    console.log(`1M  ${new Date(oneMonthFromNow)}`)
 
-    // Calculate dates for 3 months, 1 month, and 1 week from now
-    const threeMonthsFromNow = new Date(now)
-    threeMonthsFromNow.setMonth(now.getMonth() + 3)
+    const oneWeekFromNow = new Date(now);
+    oneWeekFromNow.setDate(now.getDate() + 7);
+    console.log(`1W  ${new Date(oneWeekFromNow)}`)
 
-    const oneMonthFromNow = new Date(now)
-    oneMonthFromNow.setMonth(now.getMonth() + 1)
-
-    const oneWeekFromNow = new Date(now)
-    oneWeekFromNow.setDate(now.getDate() + 7)
-
-    // Find drugs that are about to expire
-    const expiringDrugs = await db
-      .collection("drugs")
-      .aggregate([
-        {
-          $lookup: {
-            from: "coolingUnits",
-            localField: "coolingUnitId",
-            foreignField: "_id",
-            as: "cooler",
-          },
+    // Get all drugs expiring from today back to the future (including expired)
+    const expiringDrugs = await db.collection("drugs").aggregate([
+      {
+        $lookup: {
+          from: "coolingUnits",
+          localField: "coolingUnitId",
+          foreignField: "_id",
+          as: "cooler",
         },
-        {
-          $unwind: "$cooler",
+      },
+      { $unwind: "$cooler" },
+      {
+        $match: {
+          expirationDate: { $lte: threeMonthsFromNow } // include expired drugs
         },
-        {
-          $match: {
-            $or: [
-              // 3 months warning (only if the day matches to avoid daily notifications)
-              {
-                expirationDate: {
-                  $gte: new Date(threeMonthsFromNow.setHours(0, 0, 0, 0)),
-                  $lt: new Date(threeMonthsFromNow.setHours(23, 59, 59, 999)),
-                },
-              },
-              // 1 month warning (only if the day matches)
-              {
-                expirationDate: {
-                  $gte: new Date(oneMonthFromNow.setHours(0, 0, 0, 0)),
-                  $lt: new Date(oneMonthFromNow.setHours(23, 59, 59, 999)),
-                },
-              },
-              // 1 week warning (only if the day matches)
-              {
-                expirationDate: {
-                  $gte: new Date(oneWeekFromNow.setHours(0, 0, 0, 0)),
-                  $lt: new Date(oneWeekFromNow.setHours(23, 59, 59, 999)),
-                },
-              },
-            ],
-          },
+      },
+      {
+        $project: {
+          name: 1,
+          vendor: 1,
+          expirationDate: 1,
+          maxTemperature: 1,
+          unsuitableTimeThreshold: 1,
+          numberOfPackages: 1,
+          specifications: 1,
+          unusable: 1,
+          temperatureWarning: 1,
+          temperatureExceededSince: 1,
+          notificationThreeMExp: 1,
+          notificationOneMExp: 1,
+          notificationOneWeekExp: 1,
+          notificationSentForExpired: 1,
+          // Include cooler name and address as top-level fields
+          coolingUnitName: "$cooler.coolerModel",
+          coolingUnitAddress: "$cooler.address"
         },
-      ])
-      .toArray()
+      },
+    ]).toArray();
+    console.log("Total drugs matched for check: ", expiringDrugs.length);
 
-    // Group drugs by expiration timeframe
-    const threeMonthsDrugs = debug
-      ? expiringDrugs
-      : expiringDrugs.filter(
-        (drug) =>
-          drug.expirationDate >= threeMonthsFromNow.setHours(0, 0, 0, 0) &&
-          drug.expirationDate < threeMonthsFromNow.setHours(23, 59, 59, 999)
-      )
+    const threeMonthsDrugs = expiringDrugs.filter(drug => {
+      const exp = new Date(drug.expirationDate);
+      console.log(`drug.expirationDate ${exp} , start ${threeMonthsFromNow}`);
+      return  (exp <= threeMonthsFromNow && exp > oneMonthFromNow && !drug.notificationThreeMExp);
+    });
 
-    const oneMonthDrugs = debug
-      ? expiringDrugs
-      : expiringDrugs.filter(
-        (drug) =>
-          drug.expirationDate >= oneMonthFromNow.setHours(0, 0, 0, 0) &&
-          drug.expirationDate < oneMonthFromNow.setHours(23, 59, 59, 999)
-      )
+    const oneMonthDrugs = expiringDrugs.filter(drug => {
+      const exp = new Date(drug.expirationDate);
+      console.log(`drug.expirationDate ${exp} , start ${oneMonthFromNow}`);
+      return  (exp <= oneMonthFromNow && exp > oneWeekFromNow && !drug.notificationOneMExp);
+    });
 
-    const oneWeekDrugs = debug
-      ? expiringDrugs
-      : expiringDrugs.filter(
-        (drug) =>
-          drug.expirationDate >= oneWeekFromNow.setHours(0, 0, 0, 0) &&
-          drug.expirationDate < oneWeekFromNow.setHours(23, 59, 59, 999)
-      )
+    const oneWeekDrugs = expiringDrugs.filter(drug => {
+      const exp = new Date(drug.expirationDate);
+      console.log(`drug.expirationDate ${exp} , start ${oneWeekFromNow}`);
+      return  (exp <= oneWeekFromNow && exp > now && !drug.notificationOneWeekExp);
+    });
 
+    const expiredDrugs = expiringDrugs.filter(drug => {
+      const exp = new Date(Date.parse(drug.expirationDate));
+      console.log(`drug.expirationDate ${exp} , condition ${exp < now}`);
+      return  (exp < now && !drug.notificationSentForExpired);
+    });
 
-    // Send notifications for each timeframe
-    if (threeMonthsDrugs.length > 0) {
-      const title = `Drugs Expiring in 3 Months`
-      const body = `${threeMonthsDrugs.length} drug(s) will expire in 3 months.`
+    console.log("3 months drugs: ", threeMonthsDrugs.length + ` ${threeMonthsDrugs}`);
+    console.log("1 month drugs: ", oneMonthDrugs.length + ` ${oneMonthDrugs}`);
+    console.log("1 week drugs: ", oneWeekDrugs.length + ` ${oneWeekDrugs}`);
+    console.log("Expired drugs: ", expiredDrugs.length + ` ${expiredDrugs}`);
 
-      const payload = {
-        title: title,
-        body: body
-      }
-      // Send to admins
-      const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
+    // Generic notification sender
+    const sendNotification = async (drugs, title, body, flag) => {
+      if (drugs.length === 0) return;
+
+      const payload = { title, body };
+
+      await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': "auth-role=user"
+          'Cookie': 'auth-role=user',
         },
         body: JSON.stringify(payload),
       });
-    }
 
-    if (oneMonthDrugs.length > 0) {
-      const title = `Drugs Expiring in 1 Month`
-      const body = `${oneMonthDrugs.length} drug(s) will expire in 1 month.`
-
-      const payload = {
-        title: title,
-        body: body
+      if (!debug) {
+        const drugIds = drugs.map(drug => drug._id);
+        await db.collection("drugs").updateMany(
+          { _id: { $in: drugIds } },
+          { $set: { [flag]: true } }
+        );
       }
-      // Send to admins
-      const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie': "auth-role=user"
-        },
-        body: JSON.stringify(payload),
-      });
-    }
+    };
 
-    if (oneWeekDrugs.length > 0) {
-      const title = `Drugs Expiring in 1 Week`
-      const body = `${oneWeekDrugs.length} drug(s) will expire in 1 week.`
+    await sendNotification(
+      threeMonthsDrugs,
+      "3 Months Drug Expiration",
+      `${threeMonthsDrugs.length} drug(s) will expire in 3 months.\n\n` +
+      threeMonthsDrugs.map(drug =>
+        `Drug:${drug.name}\nCooling Unit: ${drug.coolingUnitName}\nAddress: ${drug.coolingUnitAddress}\nExpire: ${drug.expirationDate}`
+      ).join("\n\n"),
+      "notificationThreeMExp"
+    );
+    await sendNotification(
+      oneMonthDrugs,
+      "1 Months Drug Expiration",
+      `${oneMonthDrugs.length} drug(s) will expire in 1 month.\n\n` +
+      oneMonthDrugs.map(drug =>
+        `Drug:${drug.name}\nCooling Unit: ${drug.coolingUnitName}\nAddress: ${drug.coolingUnitAddress}\nExpire: ${drug.expirationDate}`
+      ).join("\n\n"),
+      "notificationOneMExp"
+    );
 
-      const payload = {
-        title: title,
-        body: body
-      }
-      // Send to admins
-      const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie': "auth-role=user"
-        },
-        body: JSON.stringify(payload),
-      });
-    }
+    await sendNotification(
+      oneWeekDrugs,
+      "1 Week Drug Expiration",
+      `${oneWeekDrugs.length} drug(s) will expire in 1 week.\n\n` +
+      oneWeekDrugs.map(drug =>
+        `Drug:${drug.name}\nCooling Unit: ${drug.coolingUnitName}\nAddress: ${drug.coolingUnitAddress}\nExpire: ${drug.expirationDate}`
+      ).join("\n\n"),
+      "notificationOneWeekExp"
+    );
+
+    await sendNotification(
+      expiredDrugs,
+      "Drugs Already Expired",
+      `${expiredDrugs.length} drug(s) have already expired.\n\n` +
+      expiredDrugs.map(drug =>
+        `Drug:${drug.name}\nCooling Unit: ${drug.coolingUnitName}\nAddress: ${drug.coolingUnitAddress}\nExpire: ${drug.expirationDate}`
+      ).join("\n\n"),
+      "notificationSentForExpired"
+    );
+
   } catch (error) {
-    console.error("Error checking expiration warnings:", error)
+    console.error("Error checking expiration warnings:", error);
   }
 }
+
 
 // Check for unusable drugs
 export async function checkUnusableDrugs(debug): Promise<void> {

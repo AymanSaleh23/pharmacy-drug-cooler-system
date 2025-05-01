@@ -66,10 +66,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     // Get the current cooling unit to check if we need to update drug temperature status
     const currentCooler = await db.collection("coolingUnits").findOne({ _id: new ObjectId(receivedID) })
     if (currentCooler && data.availability === false) {
-      console.log(`Availability Alert: ${currentCooler.coolerModel, currentCooler.address}`);
+      console.log(`Live Availability Alert: ${currentCooler.coolerModel, currentCooler.address}`);
       payload = {
-        title: `Availability Alert!`,
-        body: `Cooler Unit: is not available!\nModel:${currentCooler.coolerModel}\nVendor:${currentCooler.vendor}\nAddress:${currentCooler.address}`
+        title: `Live Alert!`,
+        body: `Cooler Unit: is not Available!\nModel:${currentCooler.coolerModel}\nVendor:${currentCooler.vendor}\nAddress:${currentCooler.address}`
       }
       const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
         method: 'POST',
@@ -84,9 +84,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
   
     if (currentCooler && data.batteryWarning === true) {
-      console.log(`Battery Warning: ${receivedID}`);
+      console.log(`Live Battery Warning: ${receivedID}`);
       payload = {
-        title: `Battery Warning !`,
+        title: `Live Warning !`,
         body: `Cooler Unit: Battey < 20%!\nModel:${currentCooler.coolerModel}\nVendor:${currentCooler.vendor}\nAddress:${currentCooler.address}`
       }
       const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
@@ -136,20 +136,6 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
             if (hoursExceeded > drug.unsuitableTimeThreshold) {
               updates.unusable = true
-              console.log(`Unsability Alert: ${receivedID}`);
-              payload = {
-                title: `Unsability Alert!`,
-                body: `Drug ${drug.name} is not usable anymore due to temperature exceed time limits!\nModel:${currentCooler.coolerModel}\nVendor:${currentCooler.vendor}\nAddress:${currentCooler.address}`
-              }
-              const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Cookie': "auth-role=user"
-                },
-                body: JSON.stringify(payload),
-              });
-              console.log(`Unsability Alert notification response: ${receivedID}\n ${response}`); 
             }
           }
 
@@ -163,10 +149,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         const anyDrugWithWarning = drugs.some((drug) => data.currentTemperature > drug.maxTemperature)
 
         data.temperatureWarning = anyDrugWithWarning
-        console.log(`Temperature Warning: ${receivedID}`);
+        console.log(`Live Temperature Warning: ${receivedID}`);
         payload = {
-          title: `Temperature Warning!`,
-          body: `Cooler Unit: Exceeds temperature limits ${data.currentTemperature}!\nModel:${currentCooler.coolerModel}\nVendor:${currentCooler.vendor}\nAddress:${currentCooler.address}`
+          title: `Live Warning!`,
+          body: `Cooler Unit: Exceeds Temperature limits ${data.currentTemperature}!\nModel:${currentCooler.coolerModel}\nVendor:${currentCooler.vendor}\nAddress:${currentCooler.address}`
         }
         const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
           method: 'POST',
