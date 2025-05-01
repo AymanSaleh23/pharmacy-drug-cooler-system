@@ -17,7 +17,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   try {
     const { db } = await connectToDatabase()
-    const data = await request.json()
+    const { expirationDate, ...data } = await request.json()
 
     // Check if the cooling unit exists
     const coolingUnit = await db.collection("coolingUnits").findOne({ _id: new ObjectId(params.id) })
@@ -29,6 +29,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     // Add the cooling unit ID to the drug data
     const drugData = {
       ...data,
+      expirationDate: new Date(expirationDate),
       coolingUnitId: new ObjectId(params.id),
       createdAt: new Date(),
     }

@@ -73,7 +73,7 @@ export default function AddDrugPage({ params }: { params: { id: string } }) {
         body: JSON.stringify({
           name: values.name,
           vendor: values.vendor,
-          expirationDate: new Date(values.expirationDate).toISOString(),
+          expirationDate: new Date(values.expirationDate),
           maxTemperature: Number.parseFloat(values.maxTemperature),
           unsuitableTimeThreshold: Number.parseFloat(values.unsuitableTimeThreshold),
           numberOfPackages: Number.parseInt(values.numberOfPackages, 10),
