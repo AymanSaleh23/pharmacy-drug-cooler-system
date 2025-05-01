@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       // Insert if not already exists
       await tokensCollection.updateOne(
         { token:deviceToken },
-        { $setOnInsert: { deviceToken, createdAt: new Date() } },
+        { $setOnInsert: { token:deviceToken, createdAt: new Date() } },
         { upsert: true }
       );
 
