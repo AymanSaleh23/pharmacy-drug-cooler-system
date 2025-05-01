@@ -30,7 +30,7 @@ export interface Drug {
     name: string
     value: string
   }[]
-  expirationDate: Date | string
+  expirationDate: Date
   maxTemperature: number
   unsuitableTimeThreshold: number
   numberOfPackages: number
