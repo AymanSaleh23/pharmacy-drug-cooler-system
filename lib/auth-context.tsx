@@ -29,11 +29,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (password: string): Promise<boolean> => {
     // Simple password check - in a real app, this would be a server-side API call
-    if (password === "user123") {
+    if (password === "useruser") {
       setRole("user")
       setCookie("auth-role", "user", { maxAge: 60 * 60 * 24 }) // 1 day
       return true
-    } else if (password === "admin123") {
+    } else if (password === "@dm!n@dm!n") {
       setRole("admin")
       setCookie("auth-role", "admin", { maxAge: 60 * 60 * 24 }) // 1 day
       return true
