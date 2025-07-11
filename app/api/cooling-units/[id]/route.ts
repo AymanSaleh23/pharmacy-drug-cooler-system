@@ -136,6 +136,22 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
             if (hoursExceeded > drug.unsuitableTimeThreshold) {
               updates.unusable = true
+              if (updates.unusable) {
+                console.log(`Live Unusable Alert: ${receivedID}`);
+                payload = {
+                  title: `Live Alert!`,
+                  body: `A New Unusable Drug: ${drug.name}.\nCooler Unit: Exceeds Temperature limits (${drug.unsuitableTimeThreshold} hours) for ${hoursExceeded} hours!\nModel:${currentCooler.coolerModel}\nVendor:${currentCooler.vendor}\nAddress:${currentCooler.address}`
+                }
+                const response = await fetch(`${process.env.NEXT_BASE_URL}/api/notifications/send`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Cookie': "auth-role=user"
+                  },
+                  body: JSON.stringify(payload),
+                });
+                console.log(`Unusable Alert notification response: ${receivedID}\n ${response}`);
+              }
             }
           }
 
