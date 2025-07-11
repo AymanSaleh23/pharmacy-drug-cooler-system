@@ -86,11 +86,6 @@ export default function LoginPage() {
             </CardFooter>
           </form>
         </Form>
-        <div className="px-6 pb-4 text-sm text-muted-foreground">
-          <p>For testing:</p>
-          <p>User password: user123</p>
-          <p>Admin password: admin123</p>
-        </div>
       </Card>
     </div>
   )
